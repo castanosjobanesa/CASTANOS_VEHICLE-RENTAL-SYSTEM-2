@@ -53,7 +53,7 @@ public class Authentication {
 
         boolean success = userDao.registerUser(username, password, role);
         if (success) {
-            System.out.println("User registered successfully!");
+            System.out.println("User registered successfully! Awaiting administrator approval.");
         } else {
             System.out.println("Registration failed (Username may already exist).");
         }
@@ -68,8 +68,16 @@ public class Authentication {
         User loggedUser = userDao.login(username, password);
         if (loggedUser != null) {
             System.out.println("Login successful! Welcome " + loggedUser.username() + " (" + loggedUser.role() + ")");
+
+            // Route to appropriate role-specific menu
+            if ("System Administrator".equalsIgnoreCase(loggedUser.role())) {
+                AdminMenu adminMenu = new AdminMenu(userDao, scanner, loggedUser);
+                adminMenu.start();
+            } else {
+                System.out.println("Dashboard for role '" + loggedUser.role() + "' is not implemented yet.");
+            }
         } else {
-            System.out.println("Invalid credentials.");
+            System.out.println("Invalid credentials or account is still pending approval.");
         }
     }
 }

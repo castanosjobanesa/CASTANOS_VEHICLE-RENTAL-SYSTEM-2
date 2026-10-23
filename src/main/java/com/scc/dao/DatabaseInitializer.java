@@ -8,7 +8,7 @@ public class DatabaseInitializer {
     public static void initializeDatabase() {
         String sql = """
             CREATE TABLE IF NOT EXISTS Users (
-                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
                 role TEXT NOT NULL,
