@@ -21,7 +21,7 @@ public class AdminMenu {
         while (true) {
             System.out.println("\n===================================");
             System.out.println("=== SYSTEM ADMINISTRATOR MENU ===");
-            System.out.println("===================================");
+            System.out.println("=====================================");
             System.out.println("1. View All Users");
             System.out.println("2. View Pending Users");
             System.out.println("3. Approve User");
