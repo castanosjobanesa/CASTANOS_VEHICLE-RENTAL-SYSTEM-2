@@ -93,7 +93,7 @@ public class AdminMenu {
     private void displayAllUsers() {
         List<User> users = userDao.getAllUsers();
         System.out.println("\n==============================");
-        System.out.println("===== ALL SYSTEM USERS =====");
+        System.out.println("==== ALL SYSTEM USERS ====");
         System.out.println("==============================");
         System.out.printf("%-5s | %-20s | %-25s | %-10s%n", "ID", "Username", "Role", "Status");
         System.out.println("------------------------------------------------------------------");
