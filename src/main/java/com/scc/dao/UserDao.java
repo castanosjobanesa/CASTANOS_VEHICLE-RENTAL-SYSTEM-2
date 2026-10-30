@@ -7,23 +7,12 @@ import java.util.List;
 
 public class UserDao {
     public boolean registerUser(String username, String passwordHash, String role) {
-        // Check if there are ANY existing System Administrators in the database
-        boolean isFirstAdmin = false;
+        // Automatically approve if the role is System Administrator
+        String status = "PENDING";
         if ("System Administrator".equalsIgnoreCase(role)) {
-            String countSql = "SELECT COUNT(*) FROM Users WHERE role = 'System Administrator'";
-            try (Connection conn = DatabaseConnection.getConnection();
-                 Statement stmt = conn.createStatement();
-                 ResultSet rs = stmt.executeQuery(countSql)) {
-                if (rs.next() && rs.getInt(1) == 0) {
-                    isFirstAdmin = true;
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            status = "APPROVED";
         }
 
-        // If it's the first admin, approve immediately. Otherwise, set to PENDING.
-        String status = isFirstAdmin ? "APPROVED" : "PENDING";
         String sql = "INSERT INTO Users (username, password_hash, role, status) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -104,11 +93,25 @@ public class UserDao {
     }
 
     public boolean approveUser(int userId) {
-        // Parameterized PreparedStatement matching teacher's specification[cite: 4]
-        String sql = "UPDATE users SET status = 'APPROVED' WHERE id = ?";
+        String sql = "UPDATE Users SET status = 'APPROVED' WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, userId);
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean updateUserRoleAndStatus(int userId, String newRole, String newStatus) {
+        String sql = "UPDATE Users SET role = ?, status = ? WHERE id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, newRole != null ? newRole.toUpperCase() : "");
+            pstmt.setString(2, newStatus != null ? newStatus.toUpperCase() : "");
+            pstmt.setInt(3, userId);
             int rowsAffected = pstmt.executeUpdate();
             return rowsAffected > 0;
         } catch (SQLException e) {
