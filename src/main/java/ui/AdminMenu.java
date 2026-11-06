@@ -1,6 +1,8 @@
 package com.scc.ui;
 
+import com.scc.dao.ActivityLogDao;
 import com.scc.dao.UserDao;
+import com.scc.model.ActivityLog;
 import com.scc.model.User;
 
 import java.util.List;
@@ -10,6 +12,7 @@ public class AdminMenu {
     private final UserDao userDao;
     private final Scanner scanner;
     private final User currentAdmin;
+    private final ActivityLogDao activityLogDao = new ActivityLogDao();
 
     public AdminMenu(UserDao userDao, Scanner scanner, User currentAdmin) {
         this.userDao = userDao;
@@ -26,7 +29,8 @@ public class AdminMenu {
             System.out.println("2. View Pending Users");
             System.out.println("3. Approve User");
             System.out.println("4. Update User Role & Status");
-            System.out.println("5. Logout");
+            System.out.println("5. View System Audit Logs");
+            System.out.println("6. Logout");
             System.out.print("Choose an option: ");
 
             int choice = readIntInput("");
@@ -36,11 +40,12 @@ public class AdminMenu {
                 case 2 -> displayPendingUsers();
                 case 3 -> handleApproveUser();
                 case 4 -> handleUpdateUser();
-                case 5 -> {
+                case 5 -> handleViewAuditLogsMenu();
+                case 6 -> {
                     System.out.println("Logging out from Admin session.");
                     return;
                 }
-                default -> System.out.println("Invalid choice. Please choose between 1 and 5.");
+                default -> System.out.println("Invalid choice. Please choose between 1 and 6.");
             }
         }
     }
@@ -144,9 +149,8 @@ public class AdminMenu {
             return;
         }
 
-        // Map the display number back to the actual User object's database ID
         User targetUser = pending.get(selection - 1);
-        boolean success = userDao.approveUser(targetUser.userId());
+        boolean success = userDao.approveUser(currentAdmin.userId(), targetUser.userId());
 
         if (success) {
             System.out.println("User '" + targetUser.username() + "' successfully approved.");
@@ -181,11 +185,55 @@ public class AdminMenu {
             return;
         }
 
-        boolean success = userDao.updateUserRoleAndStatus(targetUserId, newRole, newStatus);
+        boolean success = userDao.updateUserRoleAndStatus(currentAdmin.userId(), targetUserId, newRole, newStatus);
         if (success) {
             System.out.println("User ID " + targetUserId + " updated successfully to Role: " + newRole + ", Status: " + newStatus);
         } else {
             System.out.println("Failed to update user. Please check if the User ID exists.");
         }
+    }
+
+    private void handleViewAuditLogsMenu() {
+        while (true) {
+            System.out.println("\n=================================");
+            System.out.println("=== AUDIT LOGS MANAGEMENT ===");
+            System.out.println("=================================");
+            System.out.println("1. View All System Logs");
+            System.out.println("2. Filter Logs by User ID");
+            System.out.println("3. Back to Admin Menu");
+            System.out.print("Choose an option: ");
+
+            int choice = readIntInput("");
+            switch (choice) {
+                case 1 -> displayAuditLogs(activityLogDao.getAllLogs());
+                case 2 -> {
+                    int filterUserId = readIntInput("Enter User ID to filter by: ");
+                    displayAuditLogs(activityLogDao.getLogsByUserId(filterUserId));
+                }
+                case 3 -> {
+                    return;
+                }
+                default -> System.out.println("Invalid choice. Please choose between 1 and 3.");
+            }
+        }
+    }
+
+    private void displayAuditLogs(List<ActivityLog> logs) {
+        System.out.println("\n=========================================================================================================================================");
+        System.out.println("========================================================= SYSTEM AUDIT LOGS =============================================================");
+        System.out.println("=========================================================================================================================================");
+        System.out.printf("%-5s | %-8s | %-22s | %-65s | %-20s%n", "ID", "User ID", "Action Type", "Description", "Timestamp");
+        System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------");
+        if (logs.isEmpty()) {
+            System.out.println("No audit logs found.");
+        } else {
+            for (ActivityLog log : logs) {
+                System.out.printf("%-5s | %-8s | %-22s | %-65s | %-20s%n",
+                        log.id(), log.userId(), log.actionType(), log.description(), log.timestamp());
+            }
+        }
+        System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------");
+        System.out.println("Total Audit Logs Recorded: " + logs.size());
+        System.out.println("=========================================================================================================================================");
     }
 }

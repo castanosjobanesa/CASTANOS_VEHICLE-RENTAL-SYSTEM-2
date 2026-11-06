@@ -1,5 +1,6 @@
 package com.scc.ui;
 
+import com.scc.dao.ActivityLogDao;
 import com.scc.dao.UserDao;
 import com.scc.model.User;
 
@@ -8,6 +9,7 @@ import java.util.Scanner;
 public class Authentication {
     private final UserDao userDao;
     private final Scanner scanner;
+    private final ActivityLogDao activityLogDao = new ActivityLogDao();
 
     public Authentication(UserDao userDao, Scanner scanner) {
         this.userDao = userDao;
@@ -95,14 +97,20 @@ public class Authentication {
 
         User loggedUser = userDao.login(username, password);
         if (loggedUser != null) {
+            activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged in.");
             System.out.println("Login successful! Welcome " + loggedUser.username() + " (" + loggedUser.role() + ")");
 
-            // Route to appropriate role-specific menu
             if ("System Administrator".equalsIgnoreCase(loggedUser.role())) {
                 AdminMenu adminMenu = new AdminMenu(userDao, scanner, loggedUser);
                 adminMenu.start();
+                activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged out.");
+            } else if ("Rental Desk Agent".equalsIgnoreCase(loggedUser.role())) {
+                RentalDeskMenu rentalMenu = new RentalDeskMenu(scanner, loggedUser);
+                rentalMenu.start();
+                activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged out.");
             } else {
                 System.out.println("Dashboard for role '" + loggedUser.role() + "' is not implemented yet.");
+                activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged out.");
             }
         } else {
             System.out.println("Invalid credentials or account is still pending approval.");
