@@ -26,7 +26,7 @@ public class Authentication {
             System.out.println("3. Exit");
             System.out.print("Choose an option: ");
 
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
             int choice;
             try {
                 choice = Integer.parseInt(input);
@@ -49,9 +49,9 @@ public class Authentication {
 
     public void handleRegister() {
         System.out.print("Enter username: ");
-        String username = scanner.nextLine();
+        String username = scanner.nextLine().trim();
         System.out.print("Enter password: ");
-        String password = scanner.nextLine();
+        String password = scanner.nextLine().trim();
 
         String role = "";
         while (true) {
@@ -61,7 +61,7 @@ public class Authentication {
             System.out.println("3. System Administrator");
             System.out.print("Enter choice (1-3): ");
 
-            String choice = scanner.nextLine();
+            String choice = scanner.nextLine().trim();
 
             if (choice.equals("1")) {
                 role = "Rental Desk Agent";
@@ -91,27 +91,37 @@ public class Authentication {
 
     public void handleLogin() {
         System.out.print("Enter username: ");
-        String username = scanner.nextLine();
+        String username = scanner.nextLine().trim();
         System.out.print("Enter password: ");
-        String password = scanner.nextLine();
+        String password = scanner.nextLine().trim();
 
         User loggedUser = userDao.login(username, password);
         if (loggedUser != null) {
-            activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged in.");
+            activityLogDao.logAction(
+                    loggedUser.userId(),
+                    "AUTHENTICATION",
+                    "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged in."
+            );
             System.out.println("Login successful! Welcome " + loggedUser.username() + " (" + loggedUser.role() + ")");
 
             if ("System Administrator".equalsIgnoreCase(loggedUser.role())) {
                 AdminMenu adminMenu = new AdminMenu(userDao, scanner, loggedUser);
                 adminMenu.start();
-                activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged out.");
             } else if ("Rental Desk Agent".equalsIgnoreCase(loggedUser.role())) {
                 RentalDeskMenu rentalMenu = new RentalDeskMenu(scanner, loggedUser);
                 rentalMenu.start();
-                activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged out.");
+            } else if ("Fleet Supervisor".equalsIgnoreCase(loggedUser.role())) {
+                FleetSupervisorMenu supervisorMenu = new FleetSupervisorMenu(scanner, loggedUser);
+                supervisorMenu.start();
             } else {
                 System.out.println("Dashboard for role '" + loggedUser.role() + "' is not implemented yet.");
-                activityLogDao.logAction(loggedUser.userId(), "AUTHENTICATION", "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged out.");
             }
+
+            activityLogDao.logAction(
+                    loggedUser.userId(),
+                    "AUTHENTICATION",
+                    "User " + loggedUser.username() + " (ID: " + loggedUser.userId() + ") logged out."
+            );
         } else {
             System.out.println("Invalid credentials or account is still pending approval.");
         }
