@@ -39,7 +39,7 @@ public class RentalDeskMenu {
             System.out.println("7. Cancel / Void Rental Transaction ");
             System.out.println("8. Modify Customer Contact Details ");
             System.out.println("9. Transaction Summary Report ");
-            System.out.println("10. Logout");
+            System.out.println("0. Logout");
             System.out.print("Choose an option: ");
 
             int choice = readIntInput("");
@@ -53,7 +53,7 @@ public class RentalDeskMenu {
                 case 7 -> handleCancelRental();
                 case 8 -> handleUpdateCustomer();
                 case 9 -> handleTransactionSummary();
-                case 10 -> {
+                case 0 -> {
                     System.out.println("Logging out from Rental Desk session.");
                     return;
                 }
